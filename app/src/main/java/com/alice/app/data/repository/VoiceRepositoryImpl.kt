@@ -125,7 +125,7 @@ class VoiceRepositoryImpl @Inject constructor(
                 method = HttpMethod.Get,
                 host = "alicev2.ronaldtellez.dev",
                 port = 443,
-                path = "/terminal"
+                path = "/"
             ) {
                 url { protocol = URLProtocol.WSS }
             }
