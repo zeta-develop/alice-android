@@ -78,7 +78,7 @@ class VoiceRepositoryImpl : VoiceRepository {
         try {
             session = client.webSocketSession(
                 method = HttpMethod.Get,
-                host = "alicev2.ronaldtellez.dev",
+                host = "alice.ronaldtellez.dev",
                 port = 443,
                 path = "/terminal"
             ) {
