@@ -42,10 +42,10 @@ jobs:
       - name: Build release APK
         run: |
           chmod +x gradlew
-          ./gradlew clean assembleRelease
+          ./gradlew clean assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alice-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          name: alice-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
