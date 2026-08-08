@@ -26,13 +26,28 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/release.keystore
+            cat << 'EOF' >> gradle.properties
+RELEASE_STORE_FILE=release.keystore
+RELEASE_STORE_PASSWORD=PrestaFacil
+RELEASE_KEY_ALIAS=prestafacil-alias
+RELEASE_KEY_PASSWORD=PrestaFacil
+EOF
+          fi
+
       - name: Build release APK
         run: |
           chmod +x gradlew
-          ./gradlew clean assembleDebug
+          ./gradlew clean assembleRelease
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alice-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: alice-release-apk
+          path: app/build/outputs/apk/release/*.apk

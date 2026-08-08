@@ -6,11 +6,22 @@ plugins {
 }
 
 android {
-    namespace = "com.alice.app"
+    namespace = "com.prestafacil.app"
     compileSdk = 34
 
+    signingConfigs {
+        create("release") {
+            if (project.hasProperty("RELEASE_STORE_FILE")) {
+                storeFile = file(project.property("RELEASE_STORE_FILE") as String)
+                storePassword = project.property("RELEASE_STORE_PASSWORD") as String
+                keyAlias = project.property("RELEASE_KEY_ALIAS") as String
+                keyPassword = project.property("RELEASE_KEY_PASSWORD") as String
+            }
+        }
+    }
+
     defaultConfig {
-        applicationId = "com.alice.app"
+        applicationId = "com.prestafacil.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -26,6 +37,9 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (project.hasProperty("RELEASE_STORE_FILE")) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

@@ -1,4 +1,4 @@
-package com.alice.app
+package com.prestafacil.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
