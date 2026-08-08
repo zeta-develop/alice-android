@@ -1,7 +1,7 @@
-package com.prestafacil.app.domain.repository
+package com.alice.app.domain.repository
 
-import com.prestafacil.app.domain.model.Message
-import com.prestafacil.app.domain.model.VoiceState
+import com.alice.app.domain.model.Message
+import com.alice.app.domain.model.VoiceState
 import kotlinx.coroutines.flow.Flow
 
 interface VoiceRepository {

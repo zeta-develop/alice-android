@@ -1,4 +1,4 @@
-package com.prestafacil.app.ui.theme
+package com.alice.app.ui.theme
 
 import android.app.Activity
 import android.os.Build

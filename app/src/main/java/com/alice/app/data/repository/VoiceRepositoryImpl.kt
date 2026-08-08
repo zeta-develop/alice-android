@@ -1,8 +1,8 @@
-package com.prestafacil.app.data.repository
+package com.alice.app.data.repository
 
-import com.prestafacil.app.domain.model.Message
-import com.prestafacil.app.domain.model.VoiceState
-import com.prestafacil.app.domain.repository.VoiceRepository
+import com.alice.app.domain.model.Message
+import com.alice.app.domain.model.VoiceState
+import com.alice.app.domain.repository.VoiceRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

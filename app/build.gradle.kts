@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.prestafacil.app"
+    namespace = "com.alice.app"
     compileSdk = 34
 
     signingConfigs {
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.prestafacil.app"
+        applicationId = "com.alice.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

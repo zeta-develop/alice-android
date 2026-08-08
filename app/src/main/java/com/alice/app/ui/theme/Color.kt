@@ -1,4 +1,4 @@
-package com.prestafacil.app.ui.theme
+package com.alice.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

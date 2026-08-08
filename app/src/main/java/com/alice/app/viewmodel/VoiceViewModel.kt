@@ -1,10 +1,10 @@
-package com.prestafacil.app.viewmodel
+package com.alice.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.prestafacil.app.domain.model.Message
-import com.prestafacil.app.domain.model.VoiceState
-import com.prestafacil.app.domain.repository.VoiceRepository
+import com.alice.app.domain.model.Message
+import com.alice.app.domain.model.VoiceState
+import com.alice.app.domain.repository.VoiceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

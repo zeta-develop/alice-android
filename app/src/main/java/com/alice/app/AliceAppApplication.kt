@@ -1,4 +1,4 @@
-package com.prestafacil.app
+package com.alice.app
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

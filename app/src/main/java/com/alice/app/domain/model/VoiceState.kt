@@ -1,4 +1,4 @@
-package com.prestafacil.app.domain.model
+package com.alice.app.domain.model
 
 enum class VoiceState {
     IDLE,

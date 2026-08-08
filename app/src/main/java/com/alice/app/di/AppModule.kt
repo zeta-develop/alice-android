@@ -1,7 +1,7 @@
-package com.prestafacil.app.di
+package com.alice.app.di
 
-import com.prestafacil.app.data.repository.VoiceRepositoryImpl
-import com.prestafacil.app.domain.repository.VoiceRepository
+import com.alice.app.data.repository.VoiceRepositoryImpl
+import com.alice.app.domain.repository.VoiceRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

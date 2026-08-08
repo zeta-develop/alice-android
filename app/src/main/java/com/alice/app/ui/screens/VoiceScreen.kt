@@ -1,4 +1,4 @@
-package com.prestafacil.app.ui.screens
+package com.alice.app.ui.screens
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -16,10 +16,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.prestafacil.app.domain.model.Message
-import com.prestafacil.app.domain.model.VoiceState
-import com.prestafacil.app.viewmodel.VoiceViewModel
-import com.prestafacil.app.ui.theme.*
+import com.alice.app.domain.model.Message
+import com.alice.app.domain.model.VoiceState
+import com.alice.app.viewmodel.VoiceViewModel
+import com.alice.app.ui.theme.*
 
 @Composable
 fun VoiceScreen(viewModel: VoiceViewModel = hiltViewModel()) {
