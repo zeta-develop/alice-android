@@ -69,6 +69,15 @@ class VoiceRepositoryImpl @Inject constructor(
 
     override fun startAudioStream() {
         if (_voiceStateUpdates.value != VoiceState.IDLE) return
+        
+        if (speechRecognizer == null) {
+            _voiceStateUpdates.value = VoiceState.IDLE
+            GlobalScope.launch {
+                _incomingMessages.emit(Message(UUID.randomUUID().toString(), "Error: El servicio de reconocimiento de voz de Google no está disponible en este dispositivo. Instala la app de Google.", false))
+            }
+            return
+        }
+
         _voiceStateUpdates.value = VoiceState.LISTENING
         GlobalScope.launch(Dispatchers.Main) {
             speechRecognizer?.startListening(recognizerIntent)
