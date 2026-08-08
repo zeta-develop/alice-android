@@ -19,8 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.util.UUID
+import javax.inject.Inject
 
-class VoiceRepositoryImpl : VoiceRepository {
+class VoiceRepositoryImpl @Inject constructor() : VoiceRepository {
     
     private val client = HttpClient(CIO) {
         install(WebSockets) {
