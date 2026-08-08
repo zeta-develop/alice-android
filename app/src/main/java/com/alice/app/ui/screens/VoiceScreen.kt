@@ -21,6 +21,7 @@ import com.alice.app.domain.model.VoiceState
 import com.alice.app.viewmodel.VoiceViewModel
 import com.alice.app.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VoiceScreen(viewModel: VoiceViewModel = hiltViewModel()) {
     val voiceState by viewModel.voiceState.collectAsState()

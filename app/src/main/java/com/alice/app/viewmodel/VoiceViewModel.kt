@@ -22,7 +22,7 @@ class VoiceViewModel @Inject constructor(
     val voiceState: StateFlow<VoiceState> = _voiceState.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(
-        listOf(Message(UUID.randomWindow().toString(), "¡Hola! Soy Alice, ¿en qué te puedo ayudar hoy?", false))
+        listOf(Message(UUID.randomUUID().toString(), "¡Hola! Soy Alice, ¿en qué te puedo ayudar hoy?", false))
     )
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
