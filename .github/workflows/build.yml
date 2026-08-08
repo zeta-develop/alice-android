@@ -33,12 +33,10 @@ jobs:
           set -euo pipefail
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > app/release.keystore
-            cat << 'EOF' >> gradle.properties
-RELEASE_STORE_FILE=release.keystore
-RELEASE_STORE_PASSWORD=PrestaFacil
-RELEASE_KEY_ALIAS=prestafacil-alias
-RELEASE_KEY_PASSWORD=PrestaFacil
-EOF
+            echo "RELEASE_STORE_FILE=release.keystore" >> gradle.properties
+            echo "RELEASE_STORE_PASSWORD=PrestaFacil" >> gradle.properties
+            echo "RELEASE_KEY_ALIAS=prestafacil-alias" >> gradle.properties
+            echo "RELEASE_KEY_PASSWORD=PrestaFacil" >> gradle.properties
           fi
 
       - name: Build release APK
