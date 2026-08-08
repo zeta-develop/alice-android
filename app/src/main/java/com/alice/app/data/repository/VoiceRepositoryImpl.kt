@@ -9,12 +9,15 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.http.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import java.util.UUID
 
 class VoiceRepositoryImpl : VoiceRepository {
@@ -30,27 +33,34 @@ class VoiceRepositoryImpl : VoiceRepository {
     private val _voiceStateUpdates = MutableStateFlow(VoiceState.IDLE)
     override val voiceStateUpdates: Flow<VoiceState> = _voiceStateUpdates.asStateFlow()
 
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: Flow<List<Message>> = _messages.asStateFlow()
+    private val _incomingMessages = MutableSharedFlow<Message>()
+    override val incomingMessages: Flow<Message> = _incomingMessages.asSharedFlow()
 
-    override suspend fun startListening() {
+    override fun startAudioStream() {
         _voiceStateUpdates.value = VoiceState.LISTENING
         // Logic to start native Android STT goes here
         // For now, simulate STT completion after 2 seconds
         GlobalScope.launch(Dispatchers.IO) {
-            kotlinx.coroutines.delay(2000)
-            stopListening()
+            delay(2000)
+            stopAudioStream()
             processVoiceInput("Hola Alice, haz una prueba del sistema.")
         }
     }
 
-    override suspend fun stopListening() {
+    override fun stopAudioStream() {
         _voiceStateUpdates.value = VoiceState.THINKING
     }
 
-    override suspend fun processVoiceInput(text: String) {
+    override fun cancelCurrentRequest() {
+        _voiceStateUpdates.value = VoiceState.IDLE
+        GlobalScope.launch {
+            session?.close()
+        }
+    }
+
+    private suspend fun processVoiceInput(text: String) {
         _voiceStateUpdates.value = VoiceState.THINKING
-        addMessage(Message(UUID.randomUUID().toString(), text, true))
+        _incomingMessages.emit(Message(UUID.randomUUID().toString(), text, true))
         
         try {
             if (session == null || !session!!.isActive) {
@@ -60,7 +70,7 @@ class VoiceRepositoryImpl : VoiceRepository {
         } catch (e: Exception) {
             e.printStackTrace()
             _voiceStateUpdates.value = VoiceState.IDLE
-            addMessage(Message(UUID.randomUUID().toString(), "Error de conexión con Alice Control Center.", false))
+            _incomingMessages.emit(Message(UUID.randomUUID().toString(), "Error de conexión con Alice Control Center.", false))
         }
     }
     
@@ -82,10 +92,10 @@ class VoiceRepositoryImpl : VoiceRepository {
                             val response = frame.readText()
                             // When receiving response, switch to SPEAKING to trigger Piper TTS
                             _voiceStateUpdates.value = VoiceState.SPEAKING
-                            addMessage(Message(UUID.randomUUID().toString(), response, false))
+                            _incomingMessages.emit(Message(UUID.randomUUID().toString(), response, false))
                             
                             // Simulate TTS duration
-                            kotlinx.coroutines.delay((response.length * 50).toLong())
+                            delay((response.length * 50).toLong())
                             _voiceStateUpdates.value = VoiceState.IDLE
                         }
                     }
@@ -98,11 +108,5 @@ class VoiceRepositoryImpl : VoiceRepository {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private fun addMessage(message: Message) {
-        val current = _messages.value.toMutableList()
-        current.add(message)
-        _messages.value = current
     }
 }
