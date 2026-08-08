@@ -5,7 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
-import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import java.util.Locale
 import com.alice.app.domain.model.Message
 import com.alice.app.domain.model.VoiceState
 import com.alice.app.domain.repository.VoiceRepository
@@ -32,7 +34,9 @@ import javax.inject.Inject
 
 class VoiceRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
-) : VoiceRepository, RecognitionListener {
+) : VoiceRepository, RecognitionListener, TextToSpeech.OnInitListener {
+
+    private var tts: TextToSpeech? = null
     
     private val client = HttpClient(CIO) {
         install(WebSockets) {
@@ -51,6 +55,9 @@ class VoiceRepositoryImpl @Inject constructor(
     override val incomingMessages: Flow<Message> = _incomingMessages.asSharedFlow()
 
     init {
+        // Initialize TTS
+        tts = TextToSpeech(context, this)
+
         // Initialize SpeechRecognizer on the main thread
         GlobalScope.launch(Dispatchers.Main) {
             if (SpeechRecognizer.isRecognitionAvailable(context)) {
@@ -127,9 +134,14 @@ class VoiceRepositoryImpl @Inject constructor(
             _voiceStateUpdates.value = VoiceState.SPEAKING
             _incomingMessages.emit(Message(UUID.randomUUID().toString(), replyText, false))
             
-            // Delay proportionally to text length to simulate speaking time
-            delay((replyText.length * 60).toLong())
-            _voiceStateUpdates.value = VoiceState.IDLE
+            // Speak the text
+            if (tts != null) {
+                val utteranceId = UUID.randomUUID().toString()
+                tts?.speak(replyText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+            } else {
+                delay((replyText.length * 60).toLong())
+                _voiceStateUpdates.value = VoiceState.IDLE
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             _voiceStateUpdates.value = VoiceState.IDLE
@@ -137,6 +149,28 @@ class VoiceRepositoryImpl @Inject constructor(
         }
     }
     
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = tts?.setLanguage(Locale("es", "MX"))
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts?.setLanguage(Locale("es", "ES")) // Fallback to Spain Spanish
+            }
+            
+            tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {
+                }
+
+                override fun onDone(utteranceId: String?) {
+                    _voiceStateUpdates.value = VoiceState.IDLE
+                }
+
+                override fun onError(utteranceId: String?) {
+                    _voiceStateUpdates.value = VoiceState.IDLE
+                }
+            })
+        }
+    }
+
     private suspend fun connectWebsocket() {
         // Obsolete function, leaving empty to avoid breaking anything if called
     }
