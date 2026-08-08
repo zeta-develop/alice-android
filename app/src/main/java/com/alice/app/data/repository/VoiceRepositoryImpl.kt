@@ -13,6 +13,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.Flow
@@ -108,49 +110,35 @@ class VoiceRepositoryImpl @Inject constructor(
         _incomingMessages.emit(Message(UUID.randomUUID().toString(), text, true))
         
         try {
-            if (session == null || !session!!.isActive) {
-                connectWebsocket()
+            val response = client.post("https://alicev2.ronaldtellez.dev/api/android/voice") {
+                contentType(ContentType.Application.Json)
+                // Build a simple JSON string to avoid dragging in full kotlinx.serialization dependencies just for one call
+                val escapedText = text.replace("\"", "\\\"").replace("\n", "\\n")
+                setBody("{\"text\":\"$escapedText\"}")
             }
-            session?.send(Frame.Text(text))
+            
+            val responseBody = response.bodyAsText()
+            
+            // Extract the 'response' field from the JSON manually since we aren't using serialization plugins
+            val regex = """"response"\s*:\s*"([^"]*)"""".toRegex()
+            val matchResult = regex.find(responseBody)
+            val replyText = matchResult?.groupValues?.get(1) ?: "No pude entender la respuesta del servidor."
+            
+            _voiceStateUpdates.value = VoiceState.SPEAKING
+            _incomingMessages.emit(Message(UUID.randomUUID().toString(), replyText, false))
+            
+            // Delay proportionally to text length to simulate speaking time
+            delay((replyText.length * 60).toLong())
+            _voiceStateUpdates.value = VoiceState.IDLE
         } catch (e: Exception) {
             e.printStackTrace()
             _voiceStateUpdates.value = VoiceState.IDLE
-            _incomingMessages.emit(Message(UUID.randomUUID().toString(), "Error de conexión con Alice Control Center.", false))
+            _incomingMessages.emit(Message(UUID.randomUUID().toString(), "Error de conexión con Alice Control Center: ${e.message}", false))
         }
     }
     
     private suspend fun connectWebsocket() {
-        try {
-            session = client.webSocketSession(
-                method = HttpMethod.Get,
-                host = "alicev2.ronaldtellez.dev",
-                port = 443,
-                path = "/"
-            ) {
-                url { protocol = URLProtocol.WSS }
-            }
-            
-            GlobalScope.launch(Dispatchers.IO) {
-                try {
-                    for (frame in session!!.incoming) {
-                        if (frame is Frame.Text) {
-                            val response = frame.readText()
-                            _voiceStateUpdates.value = VoiceState.SPEAKING
-                            _incomingMessages.emit(Message(UUID.randomUUID().toString(), response, false))
-                            
-                            delay((response.length * 60).toLong())
-                            _voiceStateUpdates.value = VoiceState.IDLE
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                } finally {
-                    _voiceStateUpdates.value = VoiceState.IDLE
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        // Obsolete function, leaving empty to avoid breaking anything if called
     }
 
     // RecognitionListener Callbacks
