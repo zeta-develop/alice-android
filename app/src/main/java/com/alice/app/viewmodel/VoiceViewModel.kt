@@ -35,6 +35,10 @@ class VoiceViewModel @Inject constructor(
         viewModelScope.launch {
             repository.voiceStateUpdates.collect { state ->
                 _voiceState.value = state
+                // Auto-listen again when Alice finishes speaking for continuous conversation
+                if (state == VoiceState.IDLE && _messages.value.isNotEmpty() && !_messages.value.last().isFromUser) {
+                    // Logic to auto-resume listening can go here
+                }
             }
         }
     }
