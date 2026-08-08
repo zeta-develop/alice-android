@@ -7,6 +7,10 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.media.MediaPlayer
+import java.io.File
+import java.io.FileOutputStream
+import android.util.Base64
 import java.util.Locale
 import com.alice.app.domain.model.Message
 import com.alice.app.domain.model.VoiceState
@@ -127,25 +131,57 @@ class VoiceRepositoryImpl @Inject constructor(
             val responseBody = response.bodyAsText()
             
             // Extract the 'response' field from the JSON manually since we aren't using serialization plugins
-            val regex = """"response"\s*:\s*"([^"]*)"""".toRegex()
-            val matchResult = regex.find(responseBody)
-            val replyText = matchResult?.groupValues?.get(1) ?: "No pude entender la respuesta del servidor."
+            val regexAudio = """"audioBase64"\s*:\s*"([^"]*)"""".toRegex()
+            val matchAudio = regexAudio.find(responseBody)
+            val audioBase64 = matchAudio?.groupValues?.get(1)
             
             _voiceStateUpdates.value = VoiceState.SPEAKING
             _incomingMessages.emit(Message(UUID.randomUUID().toString(), replyText, false))
             
-            // Speak the text
-            if (tts != null) {
-                val utteranceId = UUID.randomUUID().toString()
-                tts?.speak(replyText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+            if (!audioBase64.isNullOrEmpty() && audioBase64 != "null") {
+                try {
+                    val audioBytes = Base64.decode(audioBase64, Base64.DEFAULT)
+                    val tempAudioFile = File.createTempFile("alice_voice_", ".mp3", context.cacheDir)
+                    val fos = FileOutputStream(tempAudioFile)
+                    fos.write(audioBytes)
+                    fos.close()
+                    
+                    val mediaPlayer = MediaPlayer()
+                    mediaPlayer.setDataSource(tempAudioFile.absolutePath)
+                    mediaPlayer.setOnCompletionListener {
+                        it.release()
+                        tempAudioFile.delete()
+                        _voiceStateUpdates.value = VoiceState.IDLE
+                    }
+                    mediaPlayer.setOnErrorListener { _, _, _ ->
+                        it.release()
+                        tempAudioFile.delete()
+                        _voiceStateUpdates.value = VoiceState.IDLE
+                        true
+                    }
+                    mediaPlayer.prepare()
+                    mediaPlayer.start()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    fallbackToTTS(replyText)
+                }
             } else {
-                delay((replyText.length * 60).toLong())
-                _voiceStateUpdates.value = VoiceState.IDLE
+                fallbackToTTS(replyText)
             }
         } catch (e: Exception) {
             e.printStackTrace()
             _voiceStateUpdates.value = VoiceState.IDLE
             _incomingMessages.emit(Message(UUID.randomUUID().toString(), "Error de conexión con Alice Control Center: ${e.message}", false))
+        }
+    }
+    
+    private suspend fun fallbackToTTS(replyText: String) {
+        if (tts != null) {
+            val utteranceId = UUID.randomUUID().toString()
+            tts?.speak(replyText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+        } else {
+            delay((replyText.length * 60).toLong())
+            _voiceStateUpdates.value = VoiceState.IDLE
         }
     }
     
